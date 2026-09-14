@@ -74,10 +74,15 @@ Print a single line of text.
 | `bold` | bool | `false` | Bold text |
 | `cut` | int | `0` | `0` = no cut, `1` = full cut, `2` = partial cut |
 
-```powershell
-$body = '{ "text": "Hello, World!", "align": "center", "bold": true, "cut": 1 }'
+Text is automatically word-wrapped to the printer's line width — long lines
+break between words and explicit newlines are preserved as paragraph breaks.
+Inline `<b>...</b>` and `<u>...</u>` tags toggle bold and underline within
+the line, and combine with the `bold` flag:
 
-curl.exe -X POST http://192.168.1.50/printer/thermal_printer_api.php/print `
+```powershell
+$body = '{ "text": "Subtotal <b>$9.99</b> — <u>paid</u>", "align": "right", "cut": 1 }'
+
+curl.exe -X POST http://192.168.1.5/thermal_printer_api.php/print `
   -H "Authorization: Bearer your-secret-token" `
   -H "Content-Type: application/json" `
   -d $body
@@ -103,7 +108,7 @@ Print a QR code.
 ```powershell
 $body = '{ "data": "https://example.com", "size": 8, "cut": 1 }'
 
-curl.exe -X POST http://192.168.1.50/printer/thermal_printer_api.php/qr `
+curl.exe -X POST http://192.168.1.5/thermal_printer_api.php/qr `
   -H "Authorization: Bearer your-secret-token" `
   -H "Content-Type: application/json" `
   -d $body
@@ -132,7 +137,7 @@ Print a barcode.
 ```powershell
 $body = '{ "data": "123456789012", "barcode_type": "EAN13", "hri": "below", "height": 80, "cut": 1 }'
 
-curl.exe -X POST http://192.168.1.50/printer/thermal_printer_api.php/barcode `
+curl.exe -X POST http://192.168.1.5/thermal_printer_api.php/barcode `
   -H "Authorization: Bearer your-secret-token" `
   -H "Content-Type: application/json" `
   -d $body
@@ -151,10 +156,12 @@ receipts — everything is buffered and sent in a single TCP write.
 
 The command type is inferred from the key:
 - `"text"` → print text
-- `"qr"` → QR code  
+- `"qr"` → QR code
 - `"barcode"` → barcode
 
-Each command accepts the same fields as its individual endpoint.
+Each command accepts the same fields as its individual endpoint. Text commands
+are word-wrapped and honor inline `<b>...</b>` and `<u>...</u>` tags exactly as
+described under `/print`.
 
 ```powershell
 $body = @'
@@ -174,7 +181,7 @@ $body = @'
 }
 '@
 
-curl.exe -X POST http://192.168.1.50/printer/thermal_printer_api.php/batch `
+curl.exe -X POST http://192.168.1.5/thermal_printer_api.php/batch `
   -H "Authorization: Bearer your-secret-token" `
   -H "Content-Type: application/json" `
   -d $body
@@ -191,7 +198,7 @@ curl.exe -X POST http://192.168.1.50/printer/thermal_printer_api.php/batch `
 Check printer status (paper, cover, errors). Body can be empty `{}`.
 
 ```powershell
-curl.exe -X POST http://192.168.1.50/printer/thermal_printer_api.php/status `
+curl.exe -X POST http://192.168.1.5/thermal_printer_api.php/status `
   -H "Authorization: Bearer your-secret-token" `
   -H "Content-Type: application/json" `
   -d '{}'
@@ -214,6 +221,7 @@ The API uses PC437 encoding internally. The following characters are mapped auto
 | Ligatures | æ Æ œ→oe Œ→OE |
 | Math | ° ½ ¼ ² ± ÷ ≈ √ |
 | Currency | £ ¥ ¢ € |
+| Dashes | – — → - |
 | Symbols | · ■ █ ▀ ▄ |
 | Lines | ─ (single) ═ (double) |
  
@@ -310,7 +318,7 @@ $body = @"
 }
 "@
 
-curl.exe -X POST http://192.168.1.50/printer/thermal_printer_api.php/batch `
+curl.exe -X POST http://192.168.1.5/thermal_printer_api.php/batch `
   -H "Authorization: Bearer your-secret-token" `
   -H "Content-Type: application/json" `
   -d $body
